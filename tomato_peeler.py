@@ -44,18 +44,27 @@ class TomatoPeeler:
             print("Element IDs found in the response:")
             for element in element_ids:
                 #print(element['id'])
-                if "scoreDetails" in element['i`d']:
+                if "scoreDetails" in element['id']:
                     score_details = json.loads(element.contents[0])
                     #print(json.dumps(score_details, indent=4, sort_keys=True))
                     audience_score_all = score_details['modal']['audienceScoreAll']
+                    critics_score_all = score_details['modal']['tomatometerScoreAll']
+                    audience_average_rating = audience_score_all.get('averageRating')
+                    audience_disliked_count = audience_score_all.get('notLikedCount')
+                    audience_liked_count = audience_score_all.get('likedCount')
                     audience_score = audience_score_all.get('value')
-                    average_rating = audience_score_all.get('averageRating')
-                    disliked_count = audience_score_all.get('notLikedCount')
-                    liked_count = audience_score_all.get('likedCount')
-                    print(f'audience score: {audience_score}')
-                    print(f'average_rating: {average_rating}')
-                    print(f'disliked_count: {disliked_count}')
-                    print(f'liked_count: {liked_count}')
+                    critics_average_rating = critics_score_all.get('averageRating')
+                    critics_disliked_count = critics_score_all.get('notLikedCount')
+                    critics_liked_count = critics_score_all.get('likedCount')
+                    critics_score = critics_score_all.get('value')
+                    print(f'audience_score: {audience_score}')
+                    print(f'audience_average_rating: {audience_average_rating}')
+                    print(f'audience_disliked_count: {audience_disliked_count}')
+                    print(f'audience_liked_count: {audience_liked_count}')
+                    print(f'critics_score: {critics_score}')
+                    print(f'critics_average_rating: {critics_average_rating}')
+                    print(f'critics_disliked_count: {critics_disliked_count}')
+                    print(f'critics_liked_count: {critics_liked_count}')
         else:
             print("No element IDs found in the response.")
 

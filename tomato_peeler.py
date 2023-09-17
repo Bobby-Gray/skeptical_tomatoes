@@ -1,6 +1,14 @@
 from bs4 import BeautifulSoup
-import requests
 import json 
+import requests
+import pandas   
+import selenium
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+
 
 class TomatoPeeler:
     def __init__(self):
@@ -80,73 +88,114 @@ class TomatoPeeler:
             print("No element IDs found in the response.")
         return self.audience_total
 
-    def parse_and_print_audience_reviews_element_ids(self, audience_reviews_response_text):
-        soup = BeautifulSoup(audience_reviews_response_text, 'html.parser')
-        element_ids = soup.find_all(id=True)
-        audience_count = self.audience_total
-        if element_ids:
-            print("Element IDs found in the response:")
-            for element in element_ids:
-                print(element['id'])
-                profiles = {}
-                index = 0
-                #while index < 40:
-                if "reviews" in element['id']:
-                    #print(element)
-                    reviews = soup.find_all("div", {"class": "audience-review-row"})
-                    prevnext = soup.find("div", {"class": "prev-next-paging__wrapper"})
-                    prevnext1 = prevnext.find("rt-button", {"class": "next hide"})
-                    prevnext2 = prevnext1.click("Next")
-                    print(f'PAGING: {prevnext}')
-                    print(f'prevnext1: {prevnext1}')
-                    print(f'prevnext2: {prevnext2}')
-                    #prevnext1.click()
-                    for review in reviews:
-                        score = 0
-                        #print(f'each: {review}')
-                        base_url = "https://rottentomatoes.com"
-                        profile = review.a['href']
-                        score_meta = review.find("span", {"class": 'star-display'})
-                        for score_stars in score_meta:
-                            #print(f'score_stars: {score_stars}')
-                            if "filled" in str(score_stars):
-                                score += 1
-                            elif "star-display__half" in str(score_stars):
-                                score += .5
-                            else:
-                                pass
-                        #print(f'score_meta: {score_meta}')
+    def parse_and_print_audience_reviews_element_ids(self):
+        link = self.generate_audience_reviews_input_url()
+        op = webdriver.ChromeOptions()
+        op.add_argument('headless')
+        with webdriver.Chrome(options=op) as driver:
+            driver.get(link)
+            print(driver)
+            review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
+            print(f'review_table_len: {review_table_len}')
+            next_page_button = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').get_attribute("innerHTML")
+            print(f'next_page_button: {next_page_button}')
+            reviews = []
+            if 'next hide' not in next_page_button:
+                index = int(review_table_len)
+                # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
+                while index > 0:
+                    review_table_xpath = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']'
+                    review_row_xpath = driver.find_element(By.XPATH, review_table_xpath).get_attribute("innerHTML")
+                    reviews.append(review_row_xpath)
+                    index -= 1
+                next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
+                time.sleep(1)
+                print(f'next_page: {str(next_page)}')
+                driver.refresh()
+            else:
+                pass
+        print(f'review_table: {reviews}')
+            # prev_page = '//*[@id="reviews"]/div[3]/rt-button[1]'
+            # next_page = '//*[@id="reviews"]/div[3]/rt-button[2]'
+
+            # review_table_xpath = driver.find_element(By.XPATH, '//*[@id="reviews"]/div[2]').get_attribute("innerHTML")
+
+        #     datalist = []
+        #     show_more = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR,"#g-cases-by-state button[class^='svelte']")))
+        #     driver.execute_script("arguments[0].click();",show_more)
+
+        #     for elem in WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR,"#g-cases-by-state table[class^='svelte'] tr"))):
+        #         data = [item.text for item in elem.find_elements_by_css_selector("th,td")]
+        #         datalist.append(data)
+
+        # df = pandas.DataFrame(datalist)
+        # print(df)
+        # soup = BeautifulSoup(audience_reviews_response_text, 'html.parser')
+        # element_ids = soup.find_all(id=True)
+        # audience_count = self.audience_total
+        # if element_ids:
+        #     print("Element IDs found in the response:")
+        #     for element in element_ids:
+        #         print(element['id'])
+        #         profiles = {}
+        #         index = 0
+        #         #while index < 40:
+        #         if "reviews" in element['id']:
+        #             #print(element)
+        #             reviews = soup.find_all("div", {"class": "audience-review-row"})
+        #             prevnext = soup.find("div", {"class": "prev-next-paging__wrapper"})
+        #             prevnext1 = prevnext.find("rt-button", {"class": "next hide"})
+        #             prevnext2 = prevnext1.click("Next")
+        #             print(f'PAGING: {prevnext}')
+        #             print(f'prevnext1: {prevnext1}')
+        #             print(f'prevnext2: {prevnext2}')
+        #             #prevnext1.click()
+        #             for review in reviews:
+        #                 score = 0
+        #                 #print(f'each: {review}')
+        #                 base_url = "https://rottentomatoes.com"
+        #                 profile = review.a['href']
+        #                 score_meta = review.find("span", {"class": 'star-display'})
+        #                 for score_stars in score_meta:
+        #                     #print(f'score_stars: {score_stars}')
+        #                     if "filled" in str(score_stars):
+        #                         score += 1
+        #                     elif "star-display__half" in str(score_stars):
+        #                         score += .5
+        #                     else:
+        #                         pass
+        #                 #print(f'score_meta: {score_meta}')
                         
-                        profiles.update({base_url + profile: score})
-                        #profiles.append(score)
-                        #print(f'score: {score}')
-                        #print(f'profile: {profile}')
-                        index += 1
-                        #print(f'profile: {profile}') 
-                    return profiles, index, prevnext                        
+        #                 profiles.update({base_url + profile: score})
+        #                 #profiles.append(score)
+        #                 #print(f'score: {score}')
+        #                 #print(f'profile: {profile}')
+        #                 index += 1
+        #                 #print(f'profile: {profile}') 
+        #             return profiles, index, prevnext                        
 
 
-                            # profile_id = str(review['a href'])
-                            # print(f'profile_id: {profile_id}')
+        #                     # profile_id = str(review['a href'])
+        #                     # print(f'profile_id: {profile_id}')
 
                         
-                            # try:
-                            #     # Go to page 2
-                            #     next_link = browser.find_element_by_xpath('//*[@title="Go to page 2"]')
-                            #     next_link.click()
-                            #     index = 0
+        #                     # try:
+        #                     #     # Go to page 2
+        #                     #     next_link = browser.find_element_by_xpath('//*[@title="Go to page 2"]')
+        #                     #     next_link.click()
+        #                     #     index = 0
 
-                            #     # update html and soup
-                            #     html = browser.page_source
-                            #     soup = BeautifulSoup(html, "html.parser")
+        #                     #     # update html and soup
+        #                     #     html = browser.page_source
+        #                     #     soup = BeautifulSoup(html, "html.parser")
 
-                            #     time.sleep(30)
-                            # except NoSuchElementException:
-                            #     rows_remaining = False
-        else:
-            print("No element IDs found in the response.")
-        print(profiles)
-        print(index)
+        #                     #     time.sleep(30)
+        #                     # except NoSuchElementException:
+        #                     #     rows_remaining = False
+        # else:
+        #     print("No element IDs found in the response.")
+        # print(profiles)
+        # print(index)
 
 
 tomato_peeler = TomatoPeeler()
@@ -168,5 +217,5 @@ element_ids = tomato_peeler.parse_and_print_element_ids(response_text)
 print(element_ids)
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
-audience_reviews_element_ids = tomato_peeler.parse_and_print_audience_reviews_element_ids(audience_reviews_response_text)
+audience_reviews_element_ids = tomato_peeler.parse_and_print_audience_reviews_element_ids()
 print(audience_reviews_element_ids)

@@ -115,6 +115,9 @@ class TomatoPeeler:
             else:
                 pass
         print(f'review_table: {reviews}')
+
+
+        ### SCRATCHPAD
             # prev_page = '//*[@id="reviews"]/div[3]/rt-button[1]'
             # next_page = '//*[@id="reviews"]/div[3]/rt-button[2]'
 

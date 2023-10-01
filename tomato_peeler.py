@@ -135,8 +135,8 @@ class TomatoPeeler:
                 pass
         return self.reviews
     
-    def gather_audience_review_count(self):
-        self.audience_reviews_dict = self.parse_and_print_audience_reviews_element_ids()
+    def gather_audience_review_count(self, audience_reviews):
+        self.audience_reviews_dict = audience_reviews
         op = webdriver.ChromeOptions()
         op.add_argument('headless')
         with webdriver.Chrome(options=op) as driver:
@@ -162,7 +162,6 @@ class TomatoPeeler:
                         print(err)
                         continue
                 self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})        
-        print(f'self.audience_reviews_dict: {self.audience_reviews_dict}')
         return self.audience_reviews_dict
     
     def calc_review_ranges_from_audience_reviews_dict(self, audience_reviews_with_count):
@@ -185,9 +184,9 @@ class TomatoPeeler:
                 eleven_plus_reviews_count +=1
             else:
                 continue 
-        one_review_avg = one_review / one_review_count
-        two_to_ten_reviews_avg = two_to_ten_reviews / two_to_ten_reviews_count
-        eleven_plus_reviews_avg = eleven_plus_reviews / eleven_plus_reviews_count
+        one_review_avg = round(one_review / one_review_count, 2)
+        two_to_ten_reviews_avg = round(two_to_ten_reviews / two_to_ten_reviews_count, 2)
+        eleven_plus_reviews_avg = round(eleven_plus_reviews / eleven_plus_reviews_count, 2)
         print(f'{one_review_count} reviewers with only one review gave an average rating of {one_review_avg}.')
         print(f'{two_to_ten_reviews_count} reviewers with 2-10 reviews gave an average rating of {two_to_ten_reviews_avg}.')
         print(f'{eleven_plus_reviews_count} reviewers with 11+ reviews gave an average rating of {eleven_plus_reviews_avg}.')
@@ -215,7 +214,7 @@ audience_reviews = tomato_peeler.parse_and_print_audience_reviews_element_ids()
 #print(audience_reviews)
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
-audience_reviews_with_count = tomato_peeler.gather_audience_review_count()
+audience_reviews_with_count = tomato_peeler.gather_audience_review_count(audience_reviews)
 #print(audience_reviews_with_count)
 
 # Call the parse_and_print_element_ids method to parse and print element IDs

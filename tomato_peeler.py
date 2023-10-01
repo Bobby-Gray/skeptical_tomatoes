@@ -103,7 +103,6 @@ class TomatoPeeler:
                     # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
                     while index <= index_review_len:
                         try:
-                            review_table_xpath = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']'
                             review_profile_href = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[1]/div/a'
                             review_star_score_path = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[2]/div[1]/span[1]/span'
                             review_row_profile_href = driver.find_element(By.XPATH, review_profile_href).get_attribute("href")
@@ -119,7 +118,7 @@ class TomatoPeeler:
                                     score += .5
                                 else:
                                     continue
-                            self.reviews.update({review_row_profile_href : score})
+                            self.reviews.update({review_row_profile_href : [score]})
                             print({review_row_profile_href : [score]})
                             index += 1
                         except Exception as err:
@@ -137,26 +136,35 @@ class TomatoPeeler:
         return self.reviews
     
     def gather_audience_review_count(self):
-        audience_reviews_dict = self.parse_and_print_audience_reviews_element_ids()
-        for reviewer in audience_reviews_dict:
-            review_count = 0 
-            try:
-                link_replace = reviewer.replace("/profiles/","/profiles/ratings/")
-                tv_link = link_replace + "/tv"
-                movie_link = link_replace + "/tv"
-                headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"}  # Optional headers
-                tv_response = requests.get(tv_link, headers=headers)
-                movie_response = requests.get(movie_link, headers=headers)
-                tv_soup = BeautifulSoup(tv_response.text, 'html.parser')
-                movie_soup = BeautifulSoup(movie_response.text, 'html.parser')
-                tv_reviews = tv_soup.find_all(id="profile-rating")
-                movie_reviews = movie_soup.find_all(id="profile-rating")
-                print(tv_response, tv_reviews,  movie_response, movie_reviews)
-                break
-            except Exception as err:
-                    print(err)
-                    continue
-
+        self.audience_reviews_dict = self.parse_and_print_audience_reviews_element_ids()
+        op = webdriver.ChromeOptions()
+        op.add_argument('headless')
+        with webdriver.Chrome(options=op) as driver:
+            for reviewer, score in self.audience_reviews_dict.items():
+                print(f'Gathering audience review count from profile: {reviewer}')
+                reviewer_s = str(reviewer)
+                review_count = 0 
+                try:
+                    link_replace = reviewer_s.replace("/profiles/","/profiles/ratings/")
+                    tv_link = link_replace + "/tv"
+                    movie_link = link_replace + "/movie"
+                    driver.get(tv_link)
+                    tv_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
+                    tv_review_s = str(tv_review_table)
+                    tv_review_count = tv_review_s.count('profile-rating reviewpresent')
+                    review_count += tv_review_count
+                    driver.get(movie_link)
+                    movie_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
+                    movie_review_s = str(movie_review_table)
+                    movie_review_count = movie_review_s.count('profile-rating reviewpresent')
+                    review_count += movie_review_count
+                except Exception as err:
+                        print(err)
+                        continue
+                self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})        
+        print(f'self.audience_reviews_dict: {self.audience_reviews_dict}')
+        return self.audience_reviews_dict
+    
 tomato_peeler = TomatoPeeler()
 
 result = tomato_peeler.generate_input_url()

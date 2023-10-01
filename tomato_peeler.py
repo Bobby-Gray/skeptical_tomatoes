@@ -130,6 +130,9 @@ class TomatoPeeler:
                 index = int(review_table_next)
                 print(f'index2: {str(index)}')
         print(f'review_table: {reviews}')
+
+
+        ### SCRATCHPAD
             # prev_page = '//*[@id="reviews"]/div[3]/rt-button[1]'
             # next_page = '//*[@id="reviews"]/div[3]/rt-button[2]'
 

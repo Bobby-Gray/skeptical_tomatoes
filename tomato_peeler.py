@@ -94,26 +94,41 @@ class TomatoPeeler:
         op.add_argument('headless')
         with webdriver.Chrome(options=op) as driver:
             driver.get(link)
-            print(driver)
             review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             print(f'review_table_len: {review_table_len}')
             next_page_button = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').get_attribute("innerHTML")
             print(f'next_page_button: {next_page_button}')
-            reviews = []
-            if 'next hide' not in next_page_button:
-                index = int(review_table_len)
+            reviews = {}
+            while 'next hide' not in next_page_button:
+                index = 1
+                index_review_len = int(review_table_len)
                 # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
-                while index > 0:
+                while index <= index_review_len:
                     review_table_xpath = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']'
+                    review_profile_href = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[1]/div/a'
+                    review_star_score_path = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[2]/div[1]/span[1]/span'
                     review_row_xpath = driver.find_element(By.XPATH, review_table_xpath).get_attribute("innerHTML")
-                    reviews.append(review_row_xpath)
-                    index -= 1
-                next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
+                    review_row_profile_href = driver.find_element(By.XPATH, review_profile_href).get_attribute("href")
+                    review_star_score = driver.find_element(By.XPATH, review_star_score_path).get_attribute("innerHTML")
+                    review_star_score1 = review_star_score.replace('<span class="',"")
+                    review_star_score2 = review_star_score1.replace('"></span>',"")
+                    review_star_score3 = review_star_score2.split(" ")
+                    score = 0
+                    for score_stars in review_star_score3:
+                        if "filled" in score_stars:
+                            score += 1
+                        elif "star-display__half" in str(score_stars):
+                            score += .5
+                        else:
+                            continue
+                    reviews.update({review_row_profile_href : score})
+                    index += 1
+                driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
                 time.sleep(1)
-                print(f'next_page: {str(next_page)}')
                 driver.refresh()
-            else:
-                pass
+                review_table_next = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
+                index = int(review_table_next)
+                print(f'index2: {str(index)}')
         print(f'review_table: {reviews}')
             # prev_page = '//*[@id="reviews"]/div[3]/rt-button[1]'
             # next_page = '//*[@id="reviews"]/div[3]/rt-button[2]'

@@ -56,7 +56,6 @@ class TomatoPeeler:
     def parse_and_print_element_ids(self, response_text):
         soup = BeautifulSoup(response_text, 'html.parser')
         element_ids = soup.find_all(id=True)
-        
         if element_ids:
             for element in element_ids:
                 #print(element['id'])
@@ -132,6 +131,7 @@ class TomatoPeeler:
                     reviews_len = len(self.reviews)
                     print(f'next review row profile: {next_review_row_profile} table_len: {reviews_len}')
                     if next_review_row_profile in self.reviews.keys():
+                        driver.close()
                         break
                     else:
                         index = 1
@@ -166,8 +166,10 @@ class TomatoPeeler:
                     movie_review_s = str(movie_review_table)
                     movie_review_count = movie_review_s.count('profile-rating reviewpresent')
                     review_count += movie_review_count
+                    driver.close()
                 except Exception as err:
                         print(err)
+                        driver.close()
                         continue
                 self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})        
         return self.audience_reviews_dict

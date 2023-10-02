@@ -258,4 +258,4 @@ audience_reviews_with_count = tomato_peeler.gather_audience_review_count(audienc
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
 results = tomato_peeler.calc_review_ranges_from_audience_reviews_dict(audience_reviews_with_count)
-print(audience_reviews)
+print(element_ids)

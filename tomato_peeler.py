@@ -1,14 +1,9 @@
 from bs4 import BeautifulSoup
 import json 
 import requests
-import pandas   
-import selenium
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 import time
-
 
 class TomatoPeeler:
     def __init__(self):
@@ -93,7 +88,7 @@ class TomatoPeeler:
         op.add_argument('headless')
         with webdriver.Chrome(options=op) as driver:
             driver.get(link)
-            time.sleep(3)
+            time.sleep(2)
             review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             self.reviews = {}
             index = 1
@@ -180,13 +175,13 @@ class TomatoPeeler:
                     tv_link = link_replace + "/tv"
                     movie_link = link_replace + "/movie"
                     driver.get(tv_link)
-                    time.sleep(3)
+                    time.sleep(2)
                     tv_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
                     tv_review_s = str(tv_review_table)
                     tv_review_count = tv_review_s.count('profile-rating reviewpresent')
                     review_count += tv_review_count
                     driver.get(movie_link)
-                    time.sleep(3)
+                    time.sleep(2)
                     movie_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
                     movie_review_s = str(movie_review_table)
                     movie_review_count = movie_review_s.count('profile-rating reviewpresent')
@@ -258,4 +253,4 @@ audience_reviews_with_count = tomato_peeler.gather_audience_review_count(audienc
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
 results = tomato_peeler.calc_review_ranges_from_audience_reviews_dict(audience_reviews_with_count)
-print(element_ids)
+print(f'published_scores: {element_ids}')

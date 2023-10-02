@@ -85,7 +85,7 @@ class TomatoPeeler:
                     print(f'critics_liked_count: {critics_liked_count}')
         else:
             print("No element IDs found in the response.")
-        return self.audience_total
+
 
     def parse_and_print_audience_reviews_element_ids(self):
         link = self.generate_audience_reviews_input_url()
@@ -96,8 +96,8 @@ class TomatoPeeler:
             review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             next_page_button = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').get_attribute("innerHTML")
             self.reviews = {}
-            while 'next hide' not in next_page_button:
-                index = 1
+            index = 1
+            while 'next hide' not in str(next_page_button):
                 try:
                     index_review_len = int(review_table_len)
                     # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
@@ -123,25 +123,33 @@ class TomatoPeeler:
                             index += 1
                         except Exception as err:
                             print(err)
-                            pass
+                            break
+                    driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
+                    time.sleep(3)
+                    index_review_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
+                    next_page_button = str(driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').get_attribute("innerHTML"))
+                    next_review_row_profile = driver.find_element(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index_review_len) + ']/div[1]/div/a').get_attribute("href")
+                    reviews_len = len(self.reviews)
+                    print(f'next review row profile: {next_review_row_profile} table_len: {reviews_len}')
+                    if next_review_row_profile in self.reviews.keys():
+                        break
+                    else:
+                        index = 1
+                    
                 except Exception as err:
                     print(err)
-                    pass
-                driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
-                driver.refresh()
-                index_review_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
-                index = 1
+                    break
             else:
                 pass
         return self.reviews
     
     def gather_audience_review_count(self, audience_reviews):
         self.audience_reviews_dict = audience_reviews
-        op = webdriver.ChromeOptions()
-        op.add_argument('headless')
-        with webdriver.Chrome(options=op) as driver:
-            for reviewer, score in self.audience_reviews_dict.items():
-                print(f'Gathering audience review count from profile: {reviewer}')
+        for reviewer, score in self.audience_reviews_dict.items():
+            print(f'Gathering audience review count from profile: {reviewer}')
+            op = webdriver.ChromeOptions()
+            op.add_argument('headless')
+            with webdriver.Chrome(options=op) as driver:
                 reviewer_s = str(reviewer)
                 review_count = 0 
                 try:

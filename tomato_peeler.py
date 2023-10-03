@@ -35,7 +35,8 @@ class TomatoPeeler:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"}  # Optional headers
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
-            return response.text
+            self.response_text = response.text
+            return self.response_text
         else:
             return f"Failed to make GET request. Status code: {response.status_code}"
 
@@ -44,13 +45,13 @@ class TomatoPeeler:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"}  # Optional headers
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
-            self.response_text = response.text
-            return self.response_text
+            self.audience_response_text = response.text
+            return self.audience_response_text
         else:
             return f"Failed to make GET request. Status code: {response.status_code}"
     
     def parse_and_print_element_ids(self):
-        soup = BeautifulSoup(self.response_text, 'html.parser')
+        soup = BeautifulSoup(self.get_url(), 'html.parser')
         element_ids = soup.find_all(id=True)
         if element_ids:
             for element in element_ids:
@@ -147,7 +148,6 @@ class TomatoPeeler:
                             index = 1
                             continue
                         else:
-                            driver.quit()
                             break
                     else:
                         index = 1
@@ -158,19 +158,19 @@ class TomatoPeeler:
                     continue
             else:
                 outer_tries -= 1
-                pass
+        driver.quit()
         return self.reviews
     
     def gather_audience_review_count(self):
         self.audience_reviews_dict = self.reviews
-        tries = 10
         for reviewer, score in self.audience_reviews_dict.items():
+            tries = 3
             print(f'Gathering audience review count from profile: {reviewer}')
+            reviewer_s = str(reviewer)
+            review_count = 0 
             op = webdriver.ChromeOptions()
             op.add_argument('headless')
             with webdriver.Chrome(options=op) as driver:
-                reviewer_s = str(reviewer)
-                review_count = 0 
                 try:
                     link_replace = reviewer_s.replace("/profiles/","/profiles/ratings/")
                     tv_link = link_replace + "/tv"
@@ -178,25 +178,28 @@ class TomatoPeeler:
                     driver.get(tv_link)
                     time.sleep(1)
                     tv_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
-                    tv_review_s = str(tv_review_table)
-                    tv_review_count = tv_review_s.count('profile-rating reviewpresent')
-                    review_count += tv_review_count
+                    if tv_review_table is not None:
+                        tv_review_s = str(tv_review_table)
+                        tv_review_count = tv_review_s.count('profile-rating reviewpresent')
+                        review_count += tv_review_count
                     driver.get(movie_link)
                     time.sleep(1)
                     movie_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
-                    movie_review_s = str(movie_review_table)
-                    movie_review_count = movie_review_s.count('profile-rating reviewpresent')
-                    review_count += movie_review_count
-                    driver.quit()
+                    if movie_review_table is not None:
+                        movie_review_s = str(movie_review_table)
+                        movie_review_count = movie_review_s.count('profile-rating reviewpresent')
+                        review_count += movie_review_count
                 except Exception as err:
-                        tries -= 1
                         print(err)
                         if tries:
-                            driver.quit()
+                            tries -= 1
                             continue
                         else:
+                            driver.close()
                             break
-                self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})        
+                self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})
+                driver.close()        
+        driver.quit()
         return self.audience_reviews_dict
     
     def calc_review_ranges_from_audience_reviews_dict(self):
@@ -241,7 +244,7 @@ audience_reviews_response_text = tomato_peeler.get_audience_reviews_url()
 #print(audience_reviews_response_text)
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
-element_ids = tomato_peeler.parse_and_print_element_ids()
+published_scores_result = tomato_peeler.parse_and_print_element_ids()
 #print(element_ids)
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
@@ -254,4 +257,4 @@ audience_reviews_with_count = tomato_peeler.gather_audience_review_count()
 
 # Call the parse_and_print_element_ids method to parse and print element IDs
 results = tomato_peeler.calc_review_ranges_from_audience_reviews_dict()
-print(f'published_scores: {element_ids}')
+print(f'published_scores: {published_scores_result}')

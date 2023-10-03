@@ -94,12 +94,13 @@ class TomatoPeeler:
             review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             self.reviews = {}
             index = 1
-            outer_tries = 5
+            inner_tries = 3
+            outer_tries = 3
+            inner_outer_tries = 3
             while outer_tries:
                 try:
                     index_review_len = int(review_table_len)
                     # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
-                    inner_tries = 5
                     while index <= index_review_len:
                         try:
                             review_profile_href = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[1]/div/a'
@@ -134,7 +135,6 @@ class TomatoPeeler:
                     next_review_row_profile = driver.find_element(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index_review_len) + ']/div[1]/div/a').get_attribute("href")
                     reviews_len = len(self.reviews)
                     print(f'next review row profile: {next_review_row_profile} table_len: {reviews_len}')
-                    inner_outer_tries = 3
                     if next_review_row_profile in self.reviews.keys():
                         inner_outer_tries -= 1
                         if "next hide" in next_page_button:

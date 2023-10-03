@@ -65,16 +65,18 @@ class TomatoPeeler:
                     audience_disliked_count = audience_score_all.get('notLikedCount')
                     audience_liked_count = audience_score_all.get('likedCount')
                     audience_score = audience_score_all.get('value')
-                    self.audience_total = int(audience_liked_count + audience_disliked_count)
+                    audience_rating_total = int(audience_liked_count + audience_disliked_count)
+                    audience_review_count = audience_score_all.get('reviewCount')
                     critics_average_rating = critics_score_all.get('averageRating')
                     critics_disliked_count = critics_score_all.get('notLikedCount')
                     critics_liked_count = critics_score_all.get('likedCount')
                     critics_score = critics_score_all.get('value')
-                    self.published_scores = {'audience_score:': audience_score, 
+                    self.published_scores = {'audience_score:': audience_score,
+                                        'audience_review_count:': audience_review_count, 
                                         'audience_average_rating:': audience_average_rating,
                                         'audience_disliked_count:': audience_disliked_count,
                                         'audience_liked_count:': audience_liked_count,
-                                        'audience_total:': self.audience_total,
+                                        'audience_rating_total:': audience_rating_total,
                                         'critics_score:': critics_score,
                                         'critics_average_rating:': critics_average_rating,
                                         'critics_disliked_count:': critics_disliked_count,
@@ -94,15 +96,15 @@ class TomatoPeeler:
             review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             self.reviews = {}
             index = 1
-            inner_tries = 3
             outer_tries = 3
-            inner_outer_tries = 3
             while outer_tries:
                 try:
+                    inner_tries = 3
                     index_review_len = int(review_table_len)
                     # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
                     while index <= index_review_len:
                         try:
+                            inner_outer_tries = 3
                             review_profile_href = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[1]/div/a'
                             review_star_score_path = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[2]/div[1]/span[1]/span'
                             review_row_profile_href = driver.find_element(By.XPATH, review_profile_href).get_attribute("href")
@@ -116,8 +118,6 @@ class TomatoPeeler:
                                     score += 1
                                 elif "star-display__half" in str(score_stars):
                                     score += .5
-                                else:
-                                    continue
                             self.reviews.update({review_row_profile_href : [score]})
                             print({review_row_profile_href : [score]})
                             index += 1
@@ -129,7 +129,7 @@ class TomatoPeeler:
                             else: 
                                 break
                     driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
-                    time.sleep(2)
+                    time.sleep(3)
                     index_review_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
                     next_page_button = str(driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').get_attribute("innerHTML"))
                     next_review_row_profile = driver.find_element(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index_review_len) + ']/div[1]/div/a').get_attribute("href")
@@ -176,14 +176,14 @@ class TomatoPeeler:
                     tv_link = link_replace + "/tv"
                     movie_link = link_replace + "/movie"
                     driver.get(tv_link)
-                    time.sleep(1)
+                    time.sleep(2)
                     tv_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
                     if tv_review_table is not None:
                         tv_review_s = str(tv_review_table)
                         tv_review_count = tv_review_s.count('profile-rating reviewpresent')
                         review_count += tv_review_count
                     driver.get(movie_link)
-                    time.sleep(1)
+                    time.sleep(2)
                     movie_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
                     if movie_review_table is not None:
                         movie_review_s = str(movie_review_table)

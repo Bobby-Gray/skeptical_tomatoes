@@ -142,7 +142,6 @@ class TomatoPeeler:
                             inner_outer_tries = 0
                             inner_tries = 0
                             outer_tries = 0
-                            driver.quit()
                             break
                         if inner_outer_tries:
                             index = 1
@@ -163,9 +162,11 @@ class TomatoPeeler:
     
     def gather_audience_review_count(self):
         self.audience_reviews_dict = self.reviews
+        counter = 1
+        total_count = len(self.audience_reviews_dict.items())
         for reviewer, score in self.audience_reviews_dict.items():
             tries = 3
-            print(f'Gathering audience review count from profile: {reviewer}')
+            print(f'Gathering review count for profile: {reviewer} \n count: {counter}/{total_count}')
             reviewer_s = str(reviewer)
             review_count = 0 
             op = webdriver.ChromeOptions()
@@ -175,6 +176,7 @@ class TomatoPeeler:
                     link_replace = reviewer_s.replace("/profiles/","/profiles/ratings/")
                     tv_link = link_replace + "/tv"
                     movie_link = link_replace + "/movie"
+                    counter += 1
                     driver.get(tv_link)
                     time.sleep(2)
                     tv_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
@@ -189,6 +191,8 @@ class TomatoPeeler:
                         movie_review_s = str(movie_review_table)
                         movie_review_count = movie_review_s.count('profile-rating reviewpresent')
                         review_count += movie_review_count
+                    self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})
+                    driver.close()
                 except Exception as err:
                         print(err)
                         if tries:
@@ -196,9 +200,7 @@ class TomatoPeeler:
                             continue
                         else:
                             driver.close()
-                            break
-                self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})
-                driver.close()        
+                            break      
         driver.quit()
         return self.audience_reviews_dict
     

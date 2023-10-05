@@ -212,18 +212,22 @@ class TomatoPeeler:
         two_to_nine_reviews_count = 0
         ten_plus_reviews = 0
         ten_plus_reviews_count = 0  
-        for context in self.audience_reviews_dict_completed.values():
-            if context[1] <= 1:
-                one_review += context[0]
-                one_review_count += 1
-            elif 1 < context[1] < 10:
-                two_to_nine_reviews += context[0]
-                two_to_nine_reviews_count += 1
-            elif context[1] >= 10:
-                ten_plus_reviews += context[0]
-                ten_plus_reviews_count += 1
-            else:
-                continue 
+        try:
+            for context in self.audience_reviews_dict_completed.values():
+                if context[1] <= 1:
+                    one_review += context[0]
+                    one_review_count += 1
+                elif 1 < context[1] < 10:
+                    two_to_nine_reviews += context[0]
+                    two_to_nine_reviews_count += 1
+                elif context[1] >= 10:
+                    ten_plus_reviews += context[0]
+                    ten_plus_reviews_count += 1
+                else:
+                    continue 
+        except IndexError as ie:
+            print(ie)
+            pass
         one_review_avg = str(round((round(one_review / one_review_count, 3) * 20), 2)) + "%"
         two_to_nine_reviews_avg = str(round((round(two_to_nine_reviews / two_to_nine_reviews_count, 3) * 20), 2)) + "%"
         ten_plus_reviews_avg = str(round((round(ten_plus_reviews / ten_plus_reviews_count, 3) * 20), 2)) + "%"

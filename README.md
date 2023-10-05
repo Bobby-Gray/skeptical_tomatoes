@@ -10,23 +10,25 @@ This has led myself and many others to more frequently rely upon the audience sc
 
 Out of curiousity, I began writing this script to automate the task of collecting each audience reviewers review count so that I can sort and filter scores based on the number of reviews individual profiles have without using the official API.  
 
+One important thing to note in regards to the % score rotten tomatoes provides is that the score is not necessarily reflective of the score or average score given by the audience or critic but the percentage of critics/audience reviewers that rated it 60% or higher (or >3.5/5). For example, an audience score of 70% means that 70% of audience members rated this title 60% or higher. This means that if 100% of critics/audience reviewers gave the title a rating of 61%, the title will be scored at 100%. 
+
 **WARNING:** Running this may get your access to Rotten Tomatoes rate limited or blocked. I highly recommend running this script from a vpn. 
 
-Example Output:
+Example Output for Ahsoka:
   
   **Published Scores:** published_scores: {
     'audience_score:': 73, 
+    'audience_review_count:': 1762, 
     'audience_average_rating:': '3.9', 
-    'audience_disliked_count:': 1191, 
-    'audience_liked_count:': 3236, 
-    'audience_total:': 4427, 
+    'audience_disliked_count:': 1248, 
+    'audience_liked_count:': 3325, 
+    'audience_rating_total:': 4573, 
     'critics_score:': 88, 
     'critics_average_rating:': '7.40', 
     'critics_disliked_count:': 26, 
-    'critics_liked_count': 205
-    }
+    'critics_liked_count': 210}
   
   **Audience Score by Review Count:**
-  * 2214 audience reviewers with one review gave an average rating of 67.84%.
-  * 1476 audience reviewers with 2-9 reviews gave an average rating of 35.23%.
-  * 737 audience reviewers with 10+ reviews gave an average rating of 30.53%.
+  * 496 audience reviewers with one review gave an average rating of 70.56%.
+  * 490 audience reviewers with 2-9 reviews gave an average rating of 59.46%.
+  * 182 audience reviewers with 10+ reviews gave an average rating of 49.84%.

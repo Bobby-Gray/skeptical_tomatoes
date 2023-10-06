@@ -112,12 +112,12 @@ class TomatoPeeler:
                             review_star_score1 = review_star_score.replace('<span class="',"")
                             review_star_score2 = review_star_score1.replace('"></span>',"")
                             review_star_score3 = review_star_score2.split(" ")
-                            score = 0
+                            score = float(0)
                             for score_stars in review_star_score3:
                                 if "filled" in score_stars:
-                                    score += 1
+                                    score += float(1)
                                 elif "star-display__half" in str(score_stars):
-                                    score += .5
+                                    score += float(.5)
                             self.reviews.update({review_row_profile_href : [score]})
                             print({review_row_profile_href : [score]})
                             index += 1

@@ -1,8 +1,12 @@
 from bs4 import BeautifulSoup
 import json 
+import random
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
 import time
 
 class TomatoPeeler:
@@ -92,7 +96,8 @@ class TomatoPeeler:
         op.add_argument('headless')
         with webdriver.Chrome(options=op) as driver:
             driver.get(link)
-            time.sleep(1)
+            errors = [NoSuchElementException, StaleElementReferenceException]
+            wait = WebDriverWait(driver, timeout=2, poll_frequency=.2, ignored_exceptions=errors)
             review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             self.reviews = {}
             index = 1
@@ -107,14 +112,16 @@ class TomatoPeeler:
                             inner_outer_tries = 3
                             review_profile_href = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[1]/div/a'
                             review_star_score_path = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[2]/div[1]/span[1]/span'
-                            review_row_profile_href = driver.find_element(By.XPATH, review_profile_href).get_attribute("href")
-                            review_star_score = driver.find_element(By.XPATH, review_star_score_path).get_attribute("innerHTML")
+                            review_row_profile_h = wait.until(lambda d : driver.find_element(By.XPATH, review_profile_href) or True)
+                            review_row_profile_href = str(wait.until(lambda d : review_row_profile_h.get_attribute("href") or True))
+                            review_star_s = wait.until(lambda d : driver.find_element(By.XPATH, review_star_score_path) or True)
+                            review_star_score = str(wait.until(lambda d : review_star_s.get_attribute("innerHTML") or True))
                             review_star_score1 = review_star_score.replace('<span class="',"")
                             review_star_score2 = review_star_score1.replace('"></span>',"")
                             review_star_score3 = review_star_score2.split(" ")
                             score = float(0)
                             for score_stars in review_star_score3:
-                                if "filled" in score_stars:
+                                if "filled" in str(score_stars):
                                     score += float(1)
                                 elif "star-display__half" in str(score_stars):
                                     score += float(.5)
@@ -128,11 +135,15 @@ class TomatoPeeler:
                                 continue
                             else: 
                                 break
-                    driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').click()
-                    time.sleep(3)
-                    index_review_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
-                    next_page_button = str(driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]').get_attribute("innerHTML"))
-                    next_review_row_profile = driver.find_element(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index_review_len) + ']/div[1]/div/a').get_attribute("href")
+                    next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
+                    wait.until(lambda d : next_page.click() or True)
+                    time.sleep(2)
+                    index_review_len = len(wait.until(lambda d : driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div') or True))
+                    next_page_b = wait.until(lambda d : driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]') or True)
+                    next_page_button = str(wait.until(lambda d : next_page_b.get_attribute("innerHTML") or True))
+                    index_review_row = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index_review_len) + ']/div[1]/div/a'
+                    next_review_row_p = wait.until(lambda d : driver.find_element(By.XPATH, index_review_row) or True)
+                    next_review_row_profile = str(wait.until(lambda d : next_review_row_p.get_attribute("href") or True))
                     reviews_len = len(self.reviews)
                     print(f'next review row profile: {next_review_row_profile} table_len: {reviews_len}')
                     if next_review_row_profile in self.reviews.keys():
@@ -164,6 +175,17 @@ class TomatoPeeler:
         self.audience_reviews_dict = self.reviews
         counter = 1
         total_count = len(self.audience_reviews_dict.items())
+        uas = []
+        ua_url = "https://raw.githubusercontent.com/tmxkn1/UpdatedUserAgents/master/useragents.json"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"}  # Optional headers
+        response = requests.get(ua_url, headers=headers)
+        ua_list = json.loads(response.text)
+        chrome_list = ua_list.get('chrome')
+        firefox_list = ua_list.get('firefox')
+        for ua in chrome_list.values():
+            uas.append(ua)
+        for ua in firefox_list.values():
+            uas.append(ua)
         for reviewer, score in self.audience_reviews_dict.items():
             tries = 3
             print(f'Gathering review count for profile: {reviewer} \n count: {counter}/{total_count}')
@@ -172,25 +194,30 @@ class TomatoPeeler:
             op = webdriver.ChromeOptions()
             op.add_argument('headless')
             with webdriver.Chrome(options=op) as driver:
+                errors = [NoSuchElementException, StaleElementReferenceException]
+                wait = WebDriverWait(driver, timeout=2, poll_frequency=.2, ignored_exceptions=errors)
                 try:
                     link_replace = reviewer_s.replace("/profiles/","/profiles/ratings/")
                     tv_link = link_replace + "/tv"
                     movie_link = link_replace + "/movie"
                     counter += 1
+                    random_ua = str(random.choice(uas))
+                    driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": random_ua})
+                    print(f'User Agent: {driver.execute_script("return navigator.userAgent;")}')
                     driver.get(tv_link)
-                    time.sleep(2)
-                    tv_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
-                    if tv_review_table is not None:
-                        tv_review_s = str(tv_review_table)
-                        tv_review_count = tv_review_s.count('profile-rating reviewpresent')
-                        review_count += tv_review_count
+                    tv_table = '//*[@id="profiles"]/div/div[3]'
+                    tv_review_table = wait.until(lambda d : driver.find_element(By.XPATH, tv_table) or True)                                                  
+                    tv_review_s = str(wait.until(lambda d : tv_review_table.get_attribute("innerHTML") or True))
+                    tv_review_count = tv_review_s.count('profile-rating reviewpresent')
+                    print(f'tv review count: {tv_review_count}') 
+                    review_count += tv_review_count
                     driver.get(movie_link)
-                    time.sleep(2)
-                    movie_review_table = driver.find_element(By.XPATH, '//*[@id="profiles"]/div/div[3]').get_attribute("innerHTML")
-                    if movie_review_table is not None:
-                        movie_review_s = str(movie_review_table)
-                        movie_review_count = movie_review_s.count('profile-rating reviewpresent')
-                        review_count += movie_review_count
+                    movie_table = '//*[@id="profiles"]/div/div[3]'
+                    movie_review_table = wait.until(lambda d : driver.find_element(By.XPATH, movie_table) or True)
+                    movie_review_s = str(wait.until(lambda d : movie_review_table.get_attribute("innerHTML") or True))
+                    movie_review_count = movie_review_s.count('profile-rating reviewpresent') 
+                    print(f'movie review count: {movie_review_count}')
+                    review_count += movie_review_count
                     self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})
                     driver.close()
                 except Exception as err:

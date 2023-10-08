@@ -1,13 +1,16 @@
 from bs4 import BeautifulSoup
 import json 
+import pprint
 import random
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import StaleElementReferenceException
 import time
+
 
 class TomatoPeeler:
     def __init__(self):
@@ -54,7 +57,7 @@ class TomatoPeeler:
         else:
             return f"Failed to make GET request. Status code: {response.status_code}"
     
-    def parse_and_print_element_ids(self):
+    def parse_and_print_score_elements(self):
         soup = BeautifulSoup(self.get_url(), 'html.parser')
         element_ids = soup.find_all(id=True)
         if element_ids:
@@ -85,12 +88,12 @@ class TomatoPeeler:
                                         'critics_average_rating:': critics_average_rating,
                                         'critics_disliked_count:': critics_disliked_count,
                                         'critics_liked_count': critics_liked_count}
-                    print(f'published_scores: {self.published_scores}')
+                    pprint.pprint(f'published_scores: {self.published_scores}')
                     return self.published_scores
         else:
             print("No element IDs found in the response.")
 
-    def parse_and_print_audience_reviews_element_ids(self):
+    def parse_audience_review_table(self):
         link = self.generate_audience_reviews_input_url()
         op = webdriver.ChromeOptions()
         op.add_argument('headless')
@@ -98,23 +101,23 @@ class TomatoPeeler:
             driver.get(link)
             errors = [NoSuchElementException, StaleElementReferenceException]
             wait = WebDriverWait(driver, timeout=2, poll_frequency=.2, ignored_exceptions=errors)
-            review_table_len = len(driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div'))
             self.reviews = {}
             index = 1
+            review_table = driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div')
+            review_table_len = len(review_table)
             outer_tries = 3
             while outer_tries:
                 try:
                     inner_tries = 3
                     index_review_len = int(review_table_len)
-                    # next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
                     while index <= index_review_len:
                         try:
                             inner_outer_tries = 3
                             review_profile_href = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[1]/div/a'
                             review_star_score_path = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index) + ']/div[2]/div[1]/span[1]/span'
-                            review_row_profile_h = wait.until(lambda d : driver.find_element(By.XPATH, review_profile_href) or True)
+                            review_row_profile_h = driver.find_element(By.XPATH, review_profile_href)
                             review_row_profile_href = str(wait.until(lambda d : review_row_profile_h.get_attribute("href") or True))
-                            review_star_s = wait.until(lambda d : driver.find_element(By.XPATH, review_star_score_path) or True)
+                            review_star_s = driver.find_element(By.XPATH, review_star_score_path)
                             review_star_score = str(wait.until(lambda d : review_star_s.get_attribute("innerHTML") or True))
                             review_star_score1 = review_star_score.replace('<span class="',"")
                             review_star_score2 = review_star_score1.replace('"></span>',"")
@@ -125,6 +128,8 @@ class TomatoPeeler:
                                     score += float(1)
                                 elif "star-display__half" in str(score_stars):
                                     score += float(.5)
+                                else:
+                                    pass
                             self.reviews.update({review_row_profile_href : [score]})
                             print({review_row_profile_href : [score]})
                             index += 1
@@ -137,20 +142,20 @@ class TomatoPeeler:
                                 break
                     next_page = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
                     wait.until(lambda d : next_page.click() or True)
-                    time.sleep(2)
-                    index_review_len = len(wait.until(lambda d : driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div') or True))
-                    next_page_b = wait.until(lambda d : driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]') or True)
-                    next_page_button = str(wait.until(lambda d : next_page_b.get_attribute("innerHTML") or True))
+                    time.sleep(3)
+                    index_review_l = driver.find_elements(By.XPATH, '//*[@id="reviews"]/div[2]/div[2]/div')
+                    index_review_len = len(index_review_l)
+                    next_page_b = driver.find_element(By.XPATH,'//*[@id="reviews"]/div[3]/rt-button[2]')
+                    next_page_button = wait.until(lambda d : next_page_b.get_attribute("innerHTML") or True)
                     index_review_row = '//*[@id="reviews"]/div[2]/div[2]/div[' + str(index_review_len) + ']/div[1]/div/a'
-                    next_review_row_p = wait.until(lambda d : driver.find_element(By.XPATH, index_review_row) or True)
+                    next_review_row_p = driver.find_element(By.XPATH, index_review_row)
                     next_review_row_profile = str(wait.until(lambda d : next_review_row_p.get_attribute("href") or True))
                     reviews_len = len(self.reviews)
                     print(f'next review row profile: {next_review_row_profile} table_len: {reviews_len}')
                     if next_review_row_profile in self.reviews.keys():
                         inner_outer_tries -= 1
-                        if "next hide" in next_page_button:
+                        if "next hide" in str(next_page_button):
                             print(f'Next page button hidden: {next_page_button}')
-                            inner_outer_tries = 0
                             inner_tries = 0
                             outer_tries = 0
                             break
@@ -206,24 +211,29 @@ class TomatoPeeler:
                     print(f'User Agent: {driver.execute_script("return navigator.userAgent;")}')
                     driver.get(tv_link)
                     tv_table = '//*[@id="profiles"]/div/div[3]'
-                    tv_review_table = wait.until(lambda d : driver.find_element(By.XPATH, tv_table) or True)                                                  
+                    tv_review_table = driver.find_element(By.XPATH, tv_table)                                                 
                     tv_review_s = str(wait.until(lambda d : tv_review_table.get_attribute("innerHTML") or True))
                     tv_review_count = tv_review_s.count('profile-rating reviewpresent')
                     print(f'tv review count: {tv_review_count}') 
-                    review_count += tv_review_count
+                    if tv_review_count:
+                        review_count += tv_review_count
                     driver.get(movie_link)
                     movie_table = '//*[@id="profiles"]/div/div[3]'
-                    movie_review_table = wait.until(lambda d : driver.find_element(By.XPATH, movie_table) or True)
+                    movie_review_table = driver.find_element(By.XPATH, movie_table)
                     movie_review_s = str(wait.until(lambda d : movie_review_table.get_attribute("innerHTML") or True))
                     movie_review_count = movie_review_s.count('profile-rating reviewpresent') 
                     print(f'movie review count: {movie_review_count}')
-                    review_count += movie_review_count
+                    if movie_review_count:
+                        review_count += movie_review_count
                     self.audience_reviews_dict.update({ reviewer : [score[0], review_count]})
+                    entry = { reviewer : [score[0], review_count]}
+                    pprint.pprint(f'review count update: {entry}')
                     driver.close()
                 except Exception as err:
                         print(err)
                         if tries:
                             tries -= 1
+                            driver.close()
                             continue
                         else:
                             driver.close()
@@ -237,31 +247,47 @@ class TomatoPeeler:
         one_review_count = 0
         two_to_nine_reviews = 0
         two_to_nine_reviews_count = 0
-        ten_plus_reviews = 0
-        ten_plus_reviews_count = 0  
+        ten_to_nineteen_reviews = 0
+        ten_to_nineteen_reviews_count = 0
+        twenty_plus_reviews = 0 
+        twenty_plus_reviews_count = 0
         try:
-            for context in self.audience_reviews_dict_completed.values():
-                if context[1] <= 1:
-                    one_review += context[0]
-                    one_review_count += 1
-                elif 1 < context[1] < 10:
-                    two_to_nine_reviews += context[0]
-                    two_to_nine_reviews_count += 1
-                elif context[1] >= 10:
-                    ten_plus_reviews += context[0]
-                    ten_plus_reviews_count += 1
+            for prof, context in self.audience_reviews_dict_completed.items():
+                if context[1] >= 20:
+                    twenty_plus_reviews += context[0]
+                    twenty_plus_reviews_count += 1
+                    continue
                 else:
-                    continue 
-        except IndexError as ie:
-            print(ie)
-            pass
+                    if 10 <= context[1] < 20:
+                        ten_to_nineteen_reviews += context[0]
+                        ten_to_nineteen_reviews_count += 1
+                        continue
+                    else:
+                        if 1 < context[1] < 10:
+                            two_to_nine_reviews += context[0]
+                            two_to_nine_reviews_count += 1
+                            continue
+                        else:
+                            if 0 < context[1] <= 1:
+                                one_review += context[0]
+                                one_review_count += 1
+                            else:
+                                print(f'audience_reviews_dict_completed loop logic borked for {prof, context}')
+                                continue
+        except Exception as err:
+            print(err)
+            print(f'ie exception error for {prof, context}')
+            pass    
+        
         one_review_avg = str(round((round(one_review / one_review_count, 3) * 20), 2)) + "%"
         two_to_nine_reviews_avg = str(round((round(two_to_nine_reviews / two_to_nine_reviews_count, 3) * 20), 2)) + "%"
-        ten_plus_reviews_avg = str(round((round(ten_plus_reviews / ten_plus_reviews_count, 3) * 20), 2)) + "%"
+        ten_to_nineteen_reviews_avg = str(round((round(ten_to_nineteen_reviews / ten_to_nineteen_reviews_count, 3) * 20), 2)) + "%"
+        twenty_plus_reviews_avg = str(round((round(twenty_plus_reviews / twenty_plus_reviews_count, 3) * 20), 2)) + "%"
         print(f'{one_review_count} audience reviewers with one review gave an average rating of {one_review_avg}.')
         print(f'{two_to_nine_reviews_count} audience reviewers with 2-9 reviews gave an average rating of {two_to_nine_reviews_avg}.')
-        print(f'{ten_plus_reviews_count} audience reviewers with 10+ reviews gave an average rating of {ten_plus_reviews_avg}.')
-    
+        print(f'{ten_to_nineteen_reviews_count} audience reviewers with 10-19 reviews gave an average rating of {ten_to_nineteen_reviews_avg}.')
+        print(f'{twenty_plus_reviews_count} audience reviewers with 20+ reviews gave an average rating of {twenty_plus_reviews_avg}.')
+
 tomato_peeler = TomatoPeeler()
 
 result = tomato_peeler.generate_input_url()
@@ -276,18 +302,14 @@ response_text = tomato_peeler.get_url()
 audience_reviews_response_text = tomato_peeler.get_audience_reviews_url()
 #print(audience_reviews_response_text)
 
-# Call the parse_and_print_element_ids method to parse and print element IDs
-published_scores_result = tomato_peeler.parse_and_print_element_ids()
+published_scores_result = tomato_peeler.parse_and_print_score_elements()
 #print(element_ids)
 
-# Call the parse_and_print_element_ids method to parse and print element IDs
-audience_reviews = tomato_peeler.parse_and_print_audience_reviews_element_ids()
+audience_reviews = tomato_peeler.parse_audience_review_table()
 #print(audience_reviews)
 
-# Call the parse_and_print_element_ids method to parse and print element IDs
 audience_reviews_with_count = tomato_peeler.gather_audience_review_count()
 #print(audience_reviews_with_count)
 
-# Call the parse_and_print_element_ids method to parse and print element IDs
 results = tomato_peeler.calc_review_ranges_from_audience_reviews_dict()
-print(f'published_scores: {published_scores_result}')
+pprint.pprint(f'published_scores: {published_scores_result}')

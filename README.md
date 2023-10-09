@@ -14,21 +14,18 @@ One important thing to note in regards to the % score rotten tomatoes provides i
 
 **WARNING:** Running this may get your access to Rotten Tomatoes rate limited or blocked. I highly recommend running this script from a vpn. 
 
-Example Output for Ahsoka:
-  
-  **Published Scores:** published_scores: {
-    'audience_score:': 73, 
-    'audience_review_count:': 1762, 
-    'audience_average_rating:': '3.9', 
-    'audience_disliked_count:': 1248, 
-    'audience_liked_count:': 3325, 
-    'audience_rating_total:': 4573, 
-    'critics_score:': 88, 
-    'critics_average_rating:': '7.40', 
-    'critics_disliked_count:': 26, 
-    'critics_liked_count': 210}
-  
-  **Audience Score by Review Count:**
-  * 496 audience reviewers with one review gave an average rating of 70.56%.
-  * 490 audience reviewers with 2-9 reviews gave an average rating of 59.46%.
-  * 182 audience reviewers with 10+ reviews gave an average rating of 49.84%.
+**Example Output for Ahsoka:**
+760 audience reviewers with one review gave an average rating of 71.22%.
+702 audience reviewers with 2-9 reviews gave an average rating of 62.26%.
+246 audience reviewers with 10-19 reviews gave an average rating of 51.92%.
+29 audience reviewers with 20+ reviews gave an average rating of 62.42%.
+published_scores: {
+  'audience_score:': 71, 'audience_review_count:': 1991, "
+ 'audience_average_rating:': '3.8', 
+ 'audience_disliked_count:': 1475, 
+ 'audience_liked_count:': 3569, 
+ 'audience_rating_total:': 5044, 
+ 'critics_score:': 86, 
+ 'critics_average_rating:': '7.35', 
+ 'critics_disliked_count:': 32, 
+ 'critics_liked_count': 224}

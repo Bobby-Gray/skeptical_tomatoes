@@ -33,12 +33,16 @@ One important thing to note in regards to the % score rotten tomatoes provides i
 ### WARNING: Running this may get your access to Rotten Tomatoes rate limited or blocked. I highly recommend running this script from a vpn. 
 
 ## Example Results for Ahsoka:
+```
 760 audience reviewers with one review gave an average rating of 71.22%.
 702 audience reviewers with 2-9 reviews gave an average rating of 62.26%.
 246 audience reviewers with 10-19 reviews gave an average rating of 51.92%.
 29 audience reviewers with 20+ reviews gave an average rating of 62.42%.
+```
+```
 published_scores: {
-  'audience_score:': 71, 'audience_review_count:': 1991, "
+ 'audience_score:': 71, 
+ 'audience_review_count:': 1991, 
  'audience_average_rating:': '3.8', 
  'audience_disliked_count:': 1475, 
  'audience_liked_count:': 3569, 
@@ -47,3 +51,4 @@ published_scores: {
  'critics_average_rating:': '7.35', 
  'critics_disliked_count:': 32, 
  'critics_liked_count': 224}
+ ```

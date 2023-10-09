@@ -1,17 +1,17 @@
 # skeptical_tomatoes
 
 # Summary:
-A python script to parse all audience review profiles and their individual scores for a specified movie or series on Rotten Tomatoes, categorize audience scores by the number of reviews they have submitted, and calculate the scores for each category. 
+A python script to scrape all audience review profiles and their given scores for a specified movie or series on Rotten Tomatoes, categorize audience scores by the number of reviews they have submitted, and calculate the scores for each category. 
 
 # Overview:
 This script performs the following functions:
 1. Generates title url and audience score url for title based on input *defaults to tv, star_wars_ahsoka, s01*
 2. Tests connectivity to each
-3. Parses published title score metadata
-4. Collects profile urls and given score data for each audience review in the audience review table
+3. Scrapes published title score metadata
+4. Scrapes and parses profile urls and given score data for each audience review in the audience review table
   * Uses selenium to click through each page of 20
   * Adds each profile url and given score to a dictionary
-5. Visits the movie and tv review urls for each dictionary entry w/ a random user agent, sums the review count, and updates the entry.
+5. Visits the movie and tv review urls for each profile entry in the dictionary w/ a random user agent, scrapes tv and movie count, sums the review count, then updates the entry.
 6. Loops through the completed dictionary and calculates the average score based on review count range (1, 2-9, 10-19, 20+)
 
   * Use a VPN to avoid ip blacklisting

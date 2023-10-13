@@ -278,11 +278,27 @@ class TomatoPeeler:
             print(err)
             print(f'ie exception error for {prof, context}')
             pass    
+        try: 
+            one_review_avg = str(round((round(one_review / one_review_count, 3) * 20), 2)) + "%"
+        except ZeroDivisionError:
+            one_review_avg = 0
+            pass
+        try:
+            two_to_nine_reviews_avg = str(round((round(two_to_nine_reviews / two_to_nine_reviews_count, 3) * 20), 2)) + "%"
+        except ZeroDivisionError:
+            two_to_nine_reviews_avg = 0
+            pass
+        try:    
+            ten_to_nineteen_reviews_avg = str(round((round(ten_to_nineteen_reviews / ten_to_nineteen_reviews_count, 3) * 20), 2)) + "%"
+        except ZeroDivisionError:
+            ten_to_nineteen_reviews_avg = 0
+            pass
+        try:    
+            twenty_plus_reviews_avg = str(round((round(twenty_plus_reviews / twenty_plus_reviews_count, 3) * 20), 2)) + "%"
+        except ZeroDivisionError:
+            twenty_plus_reviews_avg = 0
+            pass
         
-        one_review_avg = str(round((round(one_review / one_review_count, 3) * 20), 2)) + "%"
-        two_to_nine_reviews_avg = str(round((round(two_to_nine_reviews / two_to_nine_reviews_count, 3) * 20), 2)) + "%"
-        ten_to_nineteen_reviews_avg = str(round((round(ten_to_nineteen_reviews / ten_to_nineteen_reviews_count, 3) * 20), 2)) + "%"
-        twenty_plus_reviews_avg = str(round((round(twenty_plus_reviews / twenty_plus_reviews_count, 3) * 20), 2)) + "%"
         print(f'{one_review_count} audience reviewers with one review gave an average rating of {one_review_avg}.')
         print(f'{two_to_nine_reviews_count} audience reviewers with 2-9 reviews gave an average rating of {two_to_nine_reviews_avg}.')
         print(f'{ten_to_nineteen_reviews_count} audience reviewers with 10-19 reviews gave an average rating of {ten_to_nineteen_reviews_avg}.')
